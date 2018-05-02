@@ -38,7 +38,7 @@ class Issue extends Component {
   render() {
     return (
       <div className="issue">
-        <h2><a href={this.props.html_url}>{this.props.title}</a></h2>
+	    <h2><a href={this.props.html_url}>{this.props.title}</a></h2>
         <Avatar url={this.props.user.avatar_url} user_url={this.getUserUrlFromIssueUrl(this.props.html_url)}/>
         <p><a href={this.getRepoUrlFromIssueUrl(this.props.html_url)}>{this.getRepoNameFromIssueUrl(this.props.html_url)}</a></p>
         <Labels labels={this.props.labels}/>

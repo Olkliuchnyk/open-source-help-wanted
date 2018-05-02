@@ -3,7 +3,9 @@ import Switch from 'react-toggle-switch';
 import Issues from './components/issues';
 import config from './config';
 import './App.css';
+import Cookies from 'browser-cookies';
 
+ 
 class App extends Component {
   constructor() {
     super();
@@ -15,8 +17,9 @@ class App extends Component {
       issueOpen: true,
       issues: [],
       labelValues: '',
-      keywordValues: ''
-    };
+      keywordValues: '',
+      content: ''
+     };
 
     this.toggleSortType = this.toggleSortType.bind(this);
     this.toggleSortOrder = this.toggleSortOrder.bind(this);
@@ -24,6 +27,8 @@ class App extends Component {
     this.initiateAPICall = this.initiateAPICall.bind(this);
     this.handleFormChange = this.handleFormChange.bind(this);
     this.handleInputBlur = this.handleInputBlur.bind(this);
+    this.getCookiesStore = this.getCookiesStore.bind(this);
+	this.setCookiesStore = this.setCookiesStore.bind(this);
   }
 
   initiateAPICall(sortDesc, sortType, labelValues, keywordValues, issueOpen) {
@@ -54,7 +59,6 @@ class App extends Component {
       return query;
     }
 
-
     let keywordQuery = formatSearchTerms(keywordValues, '');
     let labelQuery = formatSearchTerms(labelValues, 'label:');
 
@@ -83,6 +87,11 @@ class App extends Component {
     });
   }
 
+ setCookiesStore() {
+var d = new Date();
+Cookies.set(String(d.getTime()), this.state.keywordValues, { path: '/' });
+  }				 
+  
   render() {
     return (
       <div className="App">
@@ -102,9 +111,11 @@ class App extends Component {
                 </div>
                 <div className="input-component">
                   <label className="label-name">Keywords</label>
-                  <input className="input-element" name="keywordValues" type="text"
-                        placeholder="open source, forms"
-                         onKeyPress={this.handleFormChange} onBlur={this.handleInputBlur}/>
+                  <input className="input-element" ref='koko' name="keywordValues" type="text" list="keywordsname" placeholder="open source, forms"
+                         onKeyPress={this.handleFormChange} onBlur={this.handleInputBlur} onChange={this.getCookiesStore}/>
+<datalist id="keywordsname">
+{this.state.content}
+</datalist>
                 </div>
               </div>
 
@@ -145,6 +156,8 @@ class App extends Component {
   }
 
   toggleSortType() {
+	  this.setCookiesStore();
+
     let sortType = 'updated';
     if (this.state.sortType === 'updated') {
       sortType = 'created';
@@ -153,15 +166,18 @@ class App extends Component {
   }
 
   toggleSortOrder() {
+	this.setCookiesStore();  
     this.initiateAPICall(!this.state.sortDesc, this.state.sortType, this.state.labelValues, this.state.keywordValues, this.state.issueOpen);
   }
 
   toggleIssueOpen() {
-    this.initiateAPICall(this.state.sortDesc, this.state.sortType, this.state.labelValues, this.state.keywordValues, !this.state.issueOpen);
+    this.setCookiesStore();
+	this.initiateAPICall(this.state.sortDesc, this.state.sortType, this.state.labelValues, this.state.keywordValues, !this.state.issueOpen);
   }
 
   handleFormChange(e) {
     if (e.key === 'Enter') {
+		this.setCookiesStore();
       this.initiateAPICall(
         this.state.sortDesc,
         this.state.sortType,
@@ -170,6 +186,20 @@ class App extends Component {
         this.state.issueOpen);
     }
   }
+
+getCookiesStore() {
+var allCookies = Cookies.all();
+var set = new Set();
+for (var cookieName in allCookies) {
+  set.add(Cookies.get(cookieName));
+}
+let buffer = [];
+let i = 0;
+set.forEach((value, valueAgain, set) => {
+buffer.push(<option key={i++} value={value} />);
+}); 
+this.setState ({content: buffer});
+}
 
   handleInputBlur(e) {
     if (e.target.name === 'labelValues') {
